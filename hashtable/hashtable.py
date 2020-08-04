@@ -105,14 +105,6 @@ class HashTable:
 
         return self.hash    
 
-    # def djb2(self, key):
-    #     """
-    #     DJB2 hash, 32-bit
-
-    #     Implement this, and/or FNV-1.
-    #     """
-    #     # Your code here
-
 
     def hash_index(self, key):
         """
@@ -129,6 +121,11 @@ class HashTable:
 
         Implement this.
         """
+        # check load factor
+        lf = self.get_load_factor()        
+        if lf > 0.7:
+            current_capacity = self.get_num_slots()
+            self.resize(current_capacity * 2)
         # convert key and value to HashTableEntry instance
         node = HashTableEntry(key, value)
         
@@ -198,11 +195,24 @@ class HashTable:
         Implement this.
         """
         # Your code here
-        self.new_storage = [None] * new_capacity
-        for i in self.storage:
-            self.new_storage[i] = self.storage[i]
         self.capacity = new_capacity
-        self.storage = self.new_storage
+        new_storage = [None] * new_capacity
+        
+        for element in self.storage:
+            if element is not None:
+                current = element.head
+                while current is not None:
+                    i = self.hash_index(current.key)
+                    if new_storage[i] is None:
+                        ll = LinkedList()
+                        ll.head = current
+                        new_storage[i] = ll
+                    else:
+                        new_storage[i].add_to_head(current)    
+                    current = current.next
+        
+        self.storage = new_storage
+        return
 
 
 
