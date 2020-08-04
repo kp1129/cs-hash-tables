@@ -11,6 +11,46 @@ class HashTableEntry:
 # Hash table can't have fewer than this many slots
 MIN_CAPACITY = 8
 
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+    def find(self, key):
+        current = self.head
+
+        while current is not None:
+            if current.key == key:
+                return current
+            current = current.next    
+
+        return None    
+
+    def add_to_head(self, node):
+        node.next = self.head
+        self.head = node        
+
+    def remove_by_key(self, key):
+   
+        current = self.head
+
+        # if the head holds the key
+        if current.key == key:
+            self.head = self.head.next
+            return
+
+        # else, search the linked list while 
+        # keeping track of previous node  
+        previous = None
+        while current is not None:
+            if current.key == key:
+                previous.next = current.next
+                return 
+            previous = current
+            current = current.next    
+
+        # if no key matched
+        return "warning: no such key" 
+
 
 class HashTable:
     """
@@ -23,6 +63,7 @@ class HashTable:
     def __init__(self, capacity):
         # Your code here        
         self.capacity = capacity
+        self.elements_count = 0
         self.storage = [None] * capacity
 
 
@@ -36,7 +77,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return self.capacity
 
 
     def get_load_factor(self):
@@ -45,8 +86,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
-
+        return self.elements_count / self.capacity
 
     def fnv1(self, key):
         """
@@ -89,11 +129,28 @@ class HashTable:
 
         Implement this.
         """
+        # convert key and value to HashTableEntry instance
+        node = HashTableEntry(key, value)
+        
         # hash the key
         ix = self.hash_index(key)
-        # set the key-value pair
-        self.storage[ix] = value
-  
+
+        if self.storage[ix] is None: 
+            ll = LinkedList()
+            ll.head = node
+            self.storage[ix] = ll
+            # increment elements_count
+            self.elements_count += 1
+            return
+        # if that ix is not empty, iterate over ll to make sure there 
+        # is no matching key; if there is, overwrite its value, if not, insert.
+        found = self.storage[ix].find(key)
+        if found is not None:
+            found.value = value
+            return
+        self.storage[ix].add_to_head(node)
+        # increment elements_count
+        self.elements_count += 1    
 
 
     def delete(self, key):
@@ -106,11 +163,13 @@ class HashTable:
         """
         # get index
         ix = self.hash_index(key)
-        # check storage for this ix
-        if ix < self.capacity:
-            self.storage[ix] = None
+        # go to that index and delete the node
+        result = self.storage[ix].remove_by_key(key)
+        if type(result) == str:
+            print("warning: no such key")
         else:
-            return "no such key"  
+            # decrement elements_count
+            self.elements_count -= 1        
 
 
     def get(self, key):
@@ -123,11 +182,12 @@ class HashTable:
         """
         # get index
         ix = self.hash_index(key)
-        # check storage for this ix
-        if ix < self.capacity:
-            return self.storage[ix]
-        else: 
-            return None    
+        # go to this index and find the key
+        found = self.storage[ix].find(key)
+        if found is not None:
+            return found.value
+        return None    
+ 
 
 
     def resize(self, new_capacity):
