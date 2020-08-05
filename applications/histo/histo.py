@@ -23,9 +23,8 @@ with open(os.path.join(sys.path[0], "robin.txt")) as f:
     del my_dict[""]
 
     my_dict_items = list(my_dict.items())
-    my_dict_items.sort(key=lambda x: x[1], reverse=True)
-    print(my_dict_items)
+    my_dict_items.sort(key=lambda x: (-x[1],) + x[:1])
+    # print(my_dict_items)
     for i in my_dict_items:
-        print(i[0], print_hash(i[1]))
+        print(f"{i[0]} \t {print_hash(i[1])}".expandtabs(24))
 
-# how to get them to line up? and to order alphabetically when count is the same? 
