@@ -15,6 +15,9 @@ def slowfun(x, y):
     output, but completes quickly instead of taking ages to run.
     """
     # Your code here
+    cache = {}
+
+    
 
 
 
