@@ -125,7 +125,8 @@ class HashTable:
         lf = self.get_load_factor()        
         if lf > 0.7:
             current_capacity = self.get_num_slots()
-            self.resize(current_capacity * 2)
+            new_capacity = current_capacity * 2
+            self.resize(new_capacity)
         # convert key and value to HashTableEntry instance
         node = HashTableEntry(key, value)
         
@@ -158,10 +159,20 @@ class HashTable:
 
         Implement this.
         """
+        # import math
+        # # check load factor
+        # lf = self.get_load_factor()        
+        # if lf < 0.2:           
+        #     current_capacity = self.get_num_slots()
+        #     new_capacity = math.ceil(current_capacity * .5)
+        #     if new_capacity < MIN_CAPACITY:
+        #         new_capacity = MIN_CAPACITY
+        #     self.resize(new_capacity)
         # get index
         ix = self.hash_index(key)
         # go to that index and delete the node
         result = self.storage[ix].remove_by_key(key)
+        print("result from delete ", result)
         if type(result) == str:
             print("warning: no such key")
         else:
@@ -180,9 +191,11 @@ class HashTable:
         # get index
         ix = self.hash_index(key)
         # go to this index and find the key
-        found = self.storage[ix].find(key)
-        if found is not None:
-            return found.value
+        
+        if self.storage[ix] is not None:
+            found = self.storage[ix].find(key)
+            if found is not None:
+                return found.value
         return None    
  
 
