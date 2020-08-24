@@ -11,6 +11,46 @@ class HashTableEntry:
 # Hash table can't have fewer than this many slots
 MIN_CAPACITY = 8
 
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+    def find(self, key):
+        current = self.head
+
+        while current is not None:
+            if current.key == key:
+                return current
+            current = current.next    
+
+        return None    
+
+    def add_to_head(self, node):
+        node.next = self.head
+        self.head = node        
+
+    def remove_by_key(self, key):
+   
+        current = self.head
+
+        # if the head holds the key
+        if current.key == key:
+            self.head = self.head.next
+            return
+
+        # else, search the linked list while 
+        # keeping track of previous node  
+        previous = None
+        while current is not None:
+            if current.key == key:
+                previous.next = current.next
+                return 
+            previous = current
+            current = current.next    
+
+        # if no key matched
+        return "warning: no such key" 
+
 
 class HashTable:
     """
@@ -21,7 +61,10 @@ class HashTable:
     """
 
     def __init__(self, capacity):
-        # Your code here
+        # Your code here        
+        self.capacity = capacity
+        self.elements_count = 0
+        self.storage = [None] * capacity
 
 
     def get_num_slots(self):
@@ -34,7 +77,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        return self.capacity
 
 
     def get_load_factor(self):
@@ -43,8 +86,7 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
-
+        return self.elements_count / self.capacity
 
     def fnv1(self, key):
         """
@@ -54,15 +96,14 @@ class HashTable:
         """
 
         # Your code here
+        self.FNV_prime = 1099511628211
+        self.hash = 14695981039346656037
 
+        for char in key:
+            self.hash = self.hash * self.FNV_prime
+            self.hash = self.hash ^ ord(char)
 
-    def djb2(self, key):
-        """
-        DJB2 hash, 32-bit
-
-        Implement this, and/or FNV-1.
-        """
-        # Your code here
+        return self.hash    
 
 
     def hash_index(self, key):
@@ -70,8 +111,7 @@ class HashTable:
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
-        return self.djb2(key) % self.capacity
+        return self.fnv1(key) % self.capacity
 
     def put(self, key, value):
         """
@@ -81,7 +121,34 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        # check load factor
+        lf = self.get_load_factor()        
+        if lf > 0.7:
+            current_capacity = self.get_num_slots()
+            new_capacity = current_capacity * 2
+            self.resize(new_capacity)
+        # convert key and value to HashTableEntry instance
+        node = HashTableEntry(key, value)
+        
+        # hash the key
+        ix = self.hash_index(key)
+
+        if self.storage[ix] is None: 
+            ll = LinkedList()
+            ll.head = node
+            self.storage[ix] = ll
+            # increment elements_count
+            self.elements_count += 1
+            return
+        # if that ix is not empty, iterate over ll to make sure there 
+        # is no matching key; if there is, overwrite its value, if not, insert.
+        found = self.storage[ix].find(key)
+        if found is not None:
+            found.value = value
+            return
+        self.storage[ix].add_to_head(node)
+        # increment elements_count
+        self.elements_count += 1    
 
 
     def delete(self, key):
@@ -92,7 +159,25 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        import math
+        # check load factor
+        lf = self.get_load_factor()        
+        if lf < 0.2:           
+            current_capacity = self.get_num_slots()
+            new_capacity = math.ceil(current_capacity * .5)
+            if new_capacity < MIN_CAPACITY:
+                new_capacity = MIN_CAPACITY
+            self.resize(new_capacity)
+        # get index
+        ix = self.hash_index(key)
+        # go to that index and delete the node
+        result = self.storage[ix].remove_by_key(key)
+        print("result from delete ", result)
+        if type(result) == str:
+            print("warning: no such key")
+        else:
+            # decrement elements_count
+            self.elements_count -= 1        
 
 
     def get(self, key):
@@ -103,7 +188,16 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
+        # get index
+        ix = self.hash_index(key)
+        # go to this index and find the key
+        
+        if self.storage[ix] is not None:
+            found = self.storage[ix].find(key)
+            if found is not None:
+                return found.value
+        return None    
+ 
 
 
     def resize(self, new_capacity):
@@ -114,6 +208,24 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        self.capacity = new_capacity
+        new_storage = [None] * new_capacity
+        
+        for element in self.storage:
+            if element is not None:
+                current = element.head
+                while current is not None:
+                    i = self.hash_index(current.key)
+                    if new_storage[i] is None:
+                        ll = LinkedList()
+                        ll.head = current
+                        new_storage[i] = ll
+                    else:
+                        new_storage[i].add_to_head(current)    
+                    current = current.next
+        
+        self.storage = new_storage
+        return
 
 
 
@@ -151,3 +263,13 @@ if __name__ == "__main__":
         print(ht.get(f"line_{i}"))
 
     print("")
+
+    # ht = HashTable(8)
+
+    # ht.put("key-0", "val-0")
+    # # ht.put("key-1", "val-1")
+    # # ht.put("key-2", "val-2")
+
+    # return_value = ht.get("key-0")
+    # print('this should return true', return_value == "val-0")
+
